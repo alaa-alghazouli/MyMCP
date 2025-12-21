@@ -9,9 +9,8 @@ struct MyMCPApp: App {
         SentrySDK.start { options in
             options.dsn = "https://9c4e1a8b99ee3935fc23440dfbfe6f9c@o4509384540880896.ingest.us.sentry.io/4510574581579776"
 
-            #if DEBUG
-            options.debug = true
-            #endif
+            options.debug = false
+            options.environment = ""
 
             // Performance monitoring (profiling enabled by default in SDK 9.0+)
             options.tracesSampleRate = 0.5
@@ -19,13 +18,6 @@ struct MyMCPApp: App {
             // Include user IP and stack traces
             options.sendDefaultPii = true
             options.attachStacktrace = true
-
-            // Set environment
-            #if DEBUG
-            options.environment = "development"
-            #else
-            options.environment = "production"
-            #endif
         }
     }
 
