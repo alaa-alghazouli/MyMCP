@@ -14,7 +14,7 @@ struct MyMCPApp: App {
             #endif
 
             // Performance monitoring (profiling enabled by default in SDK 9.0+)
-            options.tracesSampleRate = 1.0
+            options.tracesSampleRate = 0.5
 
             // Include user IP and stack traces
             options.sendDefaultPii = true
