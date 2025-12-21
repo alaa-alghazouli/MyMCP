@@ -139,7 +139,10 @@ struct ClientDetailView: View {
                         .buttonStyle(.borderless)
                 }
             }
-            .sectionStyle()
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(nsColor: .controlBackgroundColor))
+            .cornerRadius(8)
         }
     }
 

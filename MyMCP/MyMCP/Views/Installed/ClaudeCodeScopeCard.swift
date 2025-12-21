@@ -168,7 +168,7 @@ struct ClaudeCodeScopeCard: View {
     private func uninstallScope() {
         Task {
             do {
-                try await appState.uninstallClaudeCodeServer(serverName, scope: scope)
+                try await appState.uninstallServer(serverName, fromClient: .claudeCode, claudeCodeScope: scope)
             } catch {
                 MCPLogger.ui.error("Failed to uninstall scope: \(error.localizedDescription, privacy: .public)")
             }

@@ -1,5 +1,4 @@
 import SwiftUI
-import os.log
 
 struct ServerDetailView: View {
     @EnvironmentObject var appState: AppState
@@ -13,7 +12,6 @@ struct ServerDetailView: View {
 
     // Claude Code scope selection
     @State private var selectedClaudeCodeScope: ClaudeCodeScope = .global
-    @State private var selectedProjectPath: String = ""
     @State private var knownProjectPaths: [String] = []
 
     var body: some View {
@@ -379,7 +377,6 @@ struct ServerDetailView: View {
 
         // Load known project paths for Claude Code scope picker
         selectedClaudeCodeScope = .global
-        selectedProjectPath = ""
         Task {
             let paths = await appState.getKnownClaudeCodeProjectPaths()
             await MainActor.run {

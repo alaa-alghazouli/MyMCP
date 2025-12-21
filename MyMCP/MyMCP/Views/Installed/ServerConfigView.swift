@@ -1,5 +1,4 @@
 import SwiftUI
-import os.log
 
 struct ServerConfigView: View {
     @EnvironmentObject var appState: AppState
@@ -208,7 +207,10 @@ struct ServerConfigView: View {
                 }
             }
         }
-        .sectionStyle()
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .cornerRadius(8)
     }
 
     // MARK: - Install to More Clients
@@ -244,7 +246,10 @@ struct ServerConfigView: View {
             .buttonStyle(.borderedProminent)
             .disabled(selectedClientsForInstall.isEmpty)
         }
-        .sectionStyle()
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .cornerRadius(8)
     }
 
     private func installToSelectedClients() {
@@ -416,7 +421,10 @@ struct StatusCard: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(color)
         }
-        .sectionStyle()
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .cornerRadius(8)
     }
 }
 

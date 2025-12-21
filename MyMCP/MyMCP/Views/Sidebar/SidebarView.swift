@@ -32,7 +32,11 @@ struct SidebarView: View {
                         HStack {
                             Text("Registry")
                             Spacer()
-                            if appState.registryServers.count > 0 {
+                            if appState.isLoadingRegistry || appState.isLoadingMetadata {
+                                ProgressView()
+                                    .controlSize(.small)
+                                    .scaleEffect(0.8)
+                            } else if appState.registryServers.count > 0 {
                                 CountBadge(count: appState.registryServers.count)
                             }
                         }

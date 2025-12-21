@@ -70,7 +70,7 @@ struct RegistryServerRow: View {
 struct TransportTypeBadge: View {
     let type: TransportType
 
-    var color: Color {
+    private var color: Color {
         switch type {
         case .stdio: return .green
         case .sse: return .orange
@@ -80,21 +80,14 @@ struct TransportTypeBadge: View {
     }
 
     var body: some View {
-        Text(type.displayName)
-            .font(.caption2)
-            .fontWeight(.medium)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(color.opacity(0.15))
-            .foregroundStyle(color)
-            .cornerRadius(4)
+        ColoredBadge(text: type.displayName, color: color)
     }
 }
 
 struct PackageTypeBadge: View {
     let type: PackageRegistryType
 
-    var color: Color {
+    private var color: Color {
         switch type {
         case .npm: return .red
         case .pypi: return .blue
@@ -105,14 +98,7 @@ struct PackageTypeBadge: View {
     }
 
     var body: some View {
-        Text(type.displayName)
-            .font(.caption2)
-            .fontWeight(.medium)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(color.opacity(0.15))
-            .foregroundStyle(color)
-            .cornerRadius(4)
+        ColoredBadge(text: type.displayName, color: color)
     }
 }
 

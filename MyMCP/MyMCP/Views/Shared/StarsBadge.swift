@@ -25,14 +25,7 @@ struct StarsBadge: View {
 /// Badge indicating a repository is archived
 struct ArchivedBadge: View {
     var body: some View {
-        Text("Archived")
-            .font(.caption2)
-            .fontWeight(.medium)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(Color.orange.opacity(0.15))
-            .foregroundStyle(.orange)
-            .cornerRadius(4)
+        ColoredBadge(text: "Archived", color: .orange)
     }
 }
 

@@ -189,15 +189,9 @@ class AppState: ObservableObject {
         }
     }
 
-    /// Get GitHub metadata for a server (dual-lookup by name and repo URL)
+    /// Get GitHub metadata for a server by name
     func getMetadata(for server: MCPServer) -> GitHubMetadata? {
-        // Try exact name match first
-        if let metadata = githubMetadata[server.name] {
-            return metadata
-        }
-        // Fallback: try matching by repository URL (handled by service)
-        // For now, we rely on the name-keyed dictionary since that's most common
-        return nil
+        return githubMetadata[server.name]
     }
 
     /// Install a server with optional progress callback for UI updates
@@ -244,12 +238,15 @@ class AppState: ObservableObject {
     }
 
     /// Uninstall a server with optional progress callback for UI updates
+    /// For Claude Code, specify the scope to uninstall from a specific location
     func uninstallServer(
         _ serverName: String,
         fromClient clientType: MCPClientType,
+        claudeCodeScope: ClaudeCodeScope? = nil,
         progress: ((UninstallProgress) -> Void)? = nil
     ) async throws {
-        MCPLogger.appState.info("uninstallServer called: '\(serverName, privacy: .public)' from \(clientType.displayName, privacy: .public)")
+        let scopeInfo = claudeCodeScope.map { " scope: \($0.displayName)" } ?? ""
+        MCPLogger.appState.info("uninstallServer called: '\(serverName, privacy: .public)' from \(clientType.displayName, privacy: .public)\(scopeInfo, privacy: .public)")
 
         guard let client = clients.first(where: { $0.type == clientType }) else {
             MCPLogger.appState.error("Client not found: \(clientType.displayName, privacy: .public)")
@@ -261,6 +258,7 @@ class AppState: ObservableObject {
         try await configFileService.uninstallServer(
             serverName: serverName,
             fromClient: client,
+            claudeCodeScope: claudeCodeScope,
             progress: progress
         )
         MCPLogger.appState.debug("Config file service completed")
@@ -533,36 +531,6 @@ class AppState: ObservableObject {
 
         progress?(.completed)
         MCPLogger.appState.info("Claude Code server '\(serverName, privacy: .public)' enabled for scope: \(scope.displayName, privacy: .public)")
-    }
-
-    /// Uninstall a Claude Code server from a specific scope (permanent removal)
-    func uninstallClaudeCodeServer(
-        _ serverName: String,
-        scope: ClaudeCodeScope,
-        progress: ((UninstallProgress) -> Void)? = nil
-    ) async throws {
-        MCPLogger.appState.info("Uninstalling Claude Code server '\(serverName, privacy: .public)' from scope: \(scope.displayName, privacy: .public)")
-
-        guard let client = clients.first(where: { $0.type == .claudeCode }) else {
-            MCPLogger.appState.error("Claude Code client not found")
-            progress?(.failed("Claude Code not found"))
-            throw AppError.clientNotFound
-        }
-
-        // Remove from client config
-        try await configFileService.uninstallServer(
-            serverName: serverName,
-            fromClient: client,
-            claudeCodeScope: scope,
-            progress: progress
-        )
-
-        // Refresh state
-        progress?(.refreshingClients)
-        await discoverClients()
-
-        progress?(.completed)
-        MCPLogger.appState.info("Claude Code server '\(serverName, privacy: .public)' uninstalled from scope: \(scope.displayName, privacy: .public)")
     }
 
     /// Toggle Claude Code server enabled/disabled state for a specific scope
