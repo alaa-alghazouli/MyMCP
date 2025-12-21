@@ -45,13 +45,13 @@ MyMCP automatically detects and manages servers for:
 
 ### Download Release
 
-Download the latest `.app` from the [Releases](https://github.com/joshka/MyMCP/releases) page.
+Download the latest `.app` from the [Releases](https://github.com/jshchnz/MyMCP/releases) page.
 
 ### Build from Source
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/joshka/MyMCP.git
+   git clone https://github.com/jshchnz/MyMCP.git
    cd MyMCP
    ```
 
