@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MenuBarView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.openWindow) private var openWindow
     @State private var isRefreshing = false
 
     var body: some View {
@@ -102,14 +103,8 @@ struct MenuBarView: View {
     }
 
     private func openMainWindow() {
+        openWindow(id: WindowID.main)
         NSApp.activate(ignoringOtherApps: true)
-        // Find and show the main window
-        for window in NSApp.windows {
-            if window.contentView != nil && !window.title.isEmpty {
-                window.makeKeyAndOrderFront(nil)
-                break
-            }
-        }
     }
 }
 

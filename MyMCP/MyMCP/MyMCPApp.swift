@@ -1,6 +1,10 @@
 import SwiftUI
 import Sentry
 
+enum WindowID {
+    static let main = "main-window"
+}
+
 @main
 struct MyMCPApp: App {
     @StateObject private var appState = AppState()
@@ -31,11 +35,13 @@ struct MyMCPApp: App {
 
     var body: some Scene {
         // Main window
-        WindowGroup {
+        WindowGroup(id: WindowID.main) {
             ContentView()
                 .frame(minWidth: 900, minHeight: 600)
                 .environmentObject(appState)
+                .handlesExternalEvents(preferring: [WindowID.main], allowing: [WindowID.main])
         }
+        .handlesExternalEvents(matching: [WindowID.main])
         .windowStyle(.automatic)
         .defaultSize(width: 1100, height: 750)
         .commands {

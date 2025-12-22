@@ -71,17 +71,6 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .navigationTitle("MyMCP")
-        .toolbar {
-            ToolbarItem(placement: .automatic) {
-                Button(action: {
-                    Task { await appState.refreshAll() }
-                }) {
-                    Image(systemName: "arrow.clockwise")
-                }
-                .help("Refresh")
-                .disabled(appState.isLoadingRegistry || appState.isLoadingClients)
-            }
-        }
     }
 }
 

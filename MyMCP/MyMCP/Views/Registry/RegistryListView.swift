@@ -40,29 +40,37 @@ struct RegistryListView: View {
 
     private var serverList: some View {
         VStack(spacing: 0) {
-            // Search bar
-            SearchField(text: $viewModel.searchText, placeholder: "Search servers...")
-                .padding()
+            // Search bar with refresh
+            HStack(spacing: 12) {
+                SearchField(text: $viewModel.searchText, placeholder: "Search servers...")
 
-            // Filter pills and sort picker
-            HStack {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        FilterPill(title: "All", isSelected: viewModel.selectedPackageType == nil) {
-                            viewModel.selectedPackageType = nil
-                        }
-
-                        ForEach(PackageRegistryType.allCases, id: \.self) { type in
-                            FilterPill(
-                                title: type.displayName,
-                                isSelected: viewModel.selectedPackageType == type
-                            ) {
-                                viewModel.selectedPackageType = type
-                            }
-                        }
-                    }
-                    .padding(.leading)
+                Button(action: {
+                    Task { await appState.refreshAll() }
+                }) {
+                    Image(systemName: "arrow.clockwise")
                 }
+                .buttonStyle(.borderless)
+                .help("Refresh")
+                .disabled(appState.isLoadingRegistry || appState.isLoadingClients)
+            }
+            .padding(.horizontal)
+            .padding(.top)
+
+            // Filter and sort pickers - glass pill style
+            HStack {
+                // Type filter
+                Picker("Type", selection: $viewModel.selectedPackageType) {
+                    Text("All").tag(nil as PackageRegistryType?)
+                    ForEach(PackageRegistryType.allCases, id: \.self) { type in
+                        Text(type.displayName).tag(type as PackageRegistryType?)
+                    }
+                }
+                .pickerStyle(.menu)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+
+                Spacer()
 
                 // Sort picker
                 Picker("Sort", selection: $viewModel.sortOption) {
@@ -72,11 +80,12 @@ struct RegistryListView: View {
                     }
                 }
                 .pickerStyle(.menu)
-                .labelsHidden()
-                .frame(width: 140)
-                .padding(.trailing)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
             }
-            .padding(.bottom, 8)
+            .padding(.horizontal)
+            .padding(.vertical, 12)
 
             Divider()
 
