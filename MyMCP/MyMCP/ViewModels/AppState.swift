@@ -118,6 +118,19 @@ class AppState: ObservableObject {
         clients.filter { !$0.isInstalled && $0.installedServers.isEmpty }
     }
 
+    /// All known project paths from Claude Code installations
+    var knownProjectPaths: [String] {
+        var paths = Set<String>()
+        for server in installedServers {
+            for scope in server.allKnownClaudeCodeScopes {
+                if let path = scope.projectPath {
+                    paths.insert(path)
+                }
+            }
+        }
+        return paths.sorted()
+    }
+
     // MARK: - Actions
     func loadInitialData() async {
         MCPLogger.appState.info("Loading initial data...")
@@ -301,6 +314,30 @@ class AppState: ObservableObject {
 
         progress?(.completed)
         MCPLogger.appState.info("copyServerConfig completed successfully for '\(serverName, privacy: .public)'")
+    }
+
+    /// Copy an existing server config to a specific Claude Code scope
+    func copyServerConfig(
+        _ config: InstalledServerConfig,
+        serverName: String,
+        toClaudeCodeScope scope: ClaudeCodeScope,
+        progress: ((InstallProgress) -> Void)? = nil
+    ) async throws {
+        MCPLogger.appState.info("copyServerConfig called: '\(serverName, privacy: .public)' to Claude Code scope: \(scope.displayName, privacy: .public)")
+
+        try await configFileService.copyServerConfigToClaudeCodeScope(
+            config: config,
+            serverName: serverName,
+            scope: scope,
+            progress: progress
+        )
+        MCPLogger.appState.debug("Config file service completed")
+
+        progress?(.refreshingClients)
+        await discoverClients()
+
+        progress?(.completed)
+        MCPLogger.appState.info("copyServerConfig completed successfully for '\(serverName, privacy: .public)' to scope: \(scope.displayName, privacy: .public)")
     }
 
     // MARK: - Enable/Disable Server Actions

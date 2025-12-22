@@ -67,7 +67,11 @@ struct UnifiedInstalledServer: Identifiable, Hashable, Searchable {
     }
 
     var installedClientTypes: [MCPClientType] {
-        Array(clients.keys).sorted { $0.displayName < $1.displayName }
+        var types = Array(clients.keys)
+        if !claudeCodeScopes.isEmpty && !types.contains(.claudeCode) {
+            types.append(.claudeCode)
+        }
+        return types.sorted { $0.displayName < $1.displayName }
     }
 
     /// All clients that have ever had this server (enabled + disabled), excluding Claude Code
@@ -123,6 +127,27 @@ struct UnifiedInstalledServer: Identifiable, Hashable, Searchable {
     /// Count of all known clients (enabled + disabled)
     var totalKnownCount: Int {
         allKnownClients.count
+    }
+
+    /// Formatted string for "Installed In" display with Claude Code scope details
+    var installationSummary: String {
+        let clientCount = installedClientTypes.count
+        let scopeCount = claudeCodeScopes.count
+
+        if clientCount == 0 {
+            return "0 clients"
+        }
+
+        // If Claude Code has multiple scopes, show hybrid format
+        if scopeCount > 1 {
+            let otherClients = clients.keys.filter { $0 != .claudeCode }.count
+            if otherClients > 0 {
+                return "\(clientCount) clients (Claude Code: \(scopeCount) scopes)"
+            }
+            return "1 client (\(scopeCount) scopes)"
+        }
+
+        return "\(clientCount) \(clientCount == 1 ? "client" : "clients")"
     }
 
     // MARK: - Claude Code Scope Properties
@@ -190,9 +215,17 @@ struct UnifiedInstalledServer: Identifiable, Hashable, Searchable {
         hasher.combine(id)
     }
 
-    /// Returns clients that are available but don't have this server installed
+    /// Returns clients that are available for installation
+    /// Claude Code is always included if installed (user can add more scopes)
     func availableClientsForInstall(from allClients: [MCPClient]) -> [MCPClient] {
         let installedTypes = Set(self.installedClientTypes)
-        return allClients.filter { !installedTypes.contains($0.type) }
+        return allClients.filter { client in
+            // Claude Code is always available - user can install to additional scopes
+            if client.type == .claudeCode {
+                return true
+            }
+            // Other clients: only show if not already installed
+            return !installedTypes.contains(client.type)
+        }
     }
 }

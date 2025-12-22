@@ -355,6 +355,14 @@ struct MenuBarScopeToggle: View {
         server.claudeCodeScopes[scope] != nil
     }
 
+    private var scopeTooltip: String {
+        var tooltip = scope.displayName
+        if let config = server.claudeCodeScopes[scope] {
+            tooltip += "\n\(config.command) \(config.args.joined(separator: " "))"
+        }
+        return tooltip
+    }
+
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: scope.systemIconName)
@@ -383,6 +391,7 @@ struct MenuBarScopeToggle: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 4)
         .background(isEnabled ? Color.clear : Color.red.opacity(0.05))
+        .help(scopeTooltip)
     }
 
     private func toggleScope(enabled: Bool) {

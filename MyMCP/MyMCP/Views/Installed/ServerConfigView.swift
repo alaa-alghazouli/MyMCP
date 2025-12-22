@@ -4,6 +4,11 @@ struct ServerConfigView: View {
     @EnvironmentObject var appState: AppState
     let server: UnifiedInstalledServer
 
+    /// Live server data from AppState - ensures UI updates when server changes
+    private var currentServer: UnifiedInstalledServer {
+        appState.installedServers.first { $0.id == server.id } ?? server
+    }
+
     @State private var showUninstallConfirm = false
     @State private var clientToUninstall: MCPClientType?
     @State private var isUninstalling = false
@@ -12,6 +17,7 @@ struct ServerConfigView: View {
 
     // Install to more clients state
     @State private var selectedClientsForInstall: Set<MCPClientType> = []
+    @State private var selectedScopesForInstall: Set<ClaudeCodeScope> = []
     @State private var showInstallToMoreSheet = false
     @State private var installSteps: [InstallationStep] = []
 
@@ -27,7 +33,7 @@ struct ServerConfigView: View {
                 clientConfigsSection
 
                 // Claude Code scopes section - show if there are any Claude Code installations
-                if server.hasClaudeCodeInstallations {
+                if currentServer.hasClaudeCodeInstallations {
                     claudeCodeScopesSection
                 }
 
@@ -100,7 +106,7 @@ struct ServerConfigView: View {
 
             StatusCard(
                 title: "Installed In",
-                value: "\(server.installedClientTypes.count) \(server.installedClientTypes.count == 1 ? "client" : "clients")",
+                value: currentServer.installationSummary,
                 color: .blue,
                 icon: "rectangle.stack"
             )
@@ -113,16 +119,16 @@ struct ServerConfigView: View {
                 Text("Client Configurations")
                     .font(.headline)
 
-                if server.hasDisabledClients {
-                    Text("(\(server.disabledClients.count) disabled)")
+                if currentServer.hasDisabledClients {
+                    Text("(\(currentServer.disabledClients.count) disabled)")
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }
             }
 
             // Show enabled clients first
-            ForEach(server.installedClientTypes, id: \.self) { clientType in
-                if let config = server.clients[clientType] {
+            ForEach(currentServer.installedClientTypes, id: \.self) { clientType in
+                if let config = currentServer.clients[clientType] {
                     ClientConfigCard(
                         clientType: clientType,
                         config: config,
@@ -138,7 +144,7 @@ struct ServerConfigView: View {
             }
 
             // Show disabled clients
-            ForEach(Array(server.disabledClients).sorted { $0.displayName < $1.displayName }, id: \.self) { clientType in
+            ForEach(Array(currentServer.disabledClients).sorted { $0.displayName < $1.displayName }, id: \.self) { clientType in
                 // Get stored config from disabled store
                 if let storedConfig = appState.disabledServersStore.getConfig(serverName: server.name, clientType: clientType) {
                     ClientConfigCard(
@@ -165,8 +171,8 @@ struct ServerConfigView: View {
                 Spacer()
 
                 // Show scope count summary
-                let scopes = server.sortedClaudeCodeScopes
-                let enabledCount = scopes.filter { !server.disabledClaudeCodeScopes.contains($0) }.count
+                let scopes = currentServer.sortedClaudeCodeScopes
+                let enabledCount = scopes.filter { !currentServer.disabledClaudeCodeScopes.contains($0) }.count
                 if enabledCount < scopes.count {
                     Text("\(enabledCount)/\(scopes.count) enabled")
                         .font(.caption)
@@ -179,21 +185,21 @@ struct ServerConfigView: View {
                 .foregroundStyle(.secondary)
 
             // Show each scope as a card
-            ForEach(server.sortedClaudeCodeScopes, id: \.self) { scope in
-                if let config = server.claudeCodeScopes[scope] {
+            ForEach(currentServer.sortedClaudeCodeScopes, id: \.self) { scope in
+                if let config = currentServer.claudeCodeScopes[scope] {
                     ClaudeCodeScopeCard(
                         scope: scope,
                         config: config,
                         serverName: server.name,
-                        isEnabled: !server.disabledClaudeCodeScopes.contains(scope),
-                        isDisabled: server.disabledClaudeCodeScopes.contains(scope)
+                        isEnabled: !currentServer.disabledClaudeCodeScopes.contains(scope),
+                        isDisabled: currentServer.disabledClaudeCodeScopes.contains(scope)
                     )
                 }
             }
 
             // Also show disabled scopes that aren't in the active list
-            ForEach(Array(server.disabledClaudeCodeScopes).sorted(), id: \.self) { scope in
-                if server.claudeCodeScopes[scope] == nil {
+            ForEach(Array(currentServer.disabledClaudeCodeScopes).sorted(), id: \.self) { scope in
+                if currentServer.claudeCodeScopes[scope] == nil {
                     // This scope is disabled - need to get config from disabled store
                     if let storedConfig = appState.disabledServersStore.getConfig(serverName: server.name, scope: scope) {
                         ClaudeCodeScopeCard(
@@ -216,7 +222,7 @@ struct ServerConfigView: View {
     // MARK: - Install to More Clients
 
     private var availableClients: [MCPClient] {
-        server.availableClientsForInstall(from: appState.installedClients)
+        currentServer.availableClientsForInstall(from: appState.installedClients)
     }
 
     private var installToMoreSection: some View {
@@ -224,7 +230,8 @@ struct ServerConfigView: View {
             Text("Install to More Clients")
                 .font(.headline)
 
-            ForEach(availableClients, id: \.type) { client in
+            // Non-Claude Code clients (simple checkboxes)
+            ForEach(availableClients.filter { $0.type != .claudeCode }, id: \.type) { client in
                 ClientTypeToggle(
                     clientType: client.type,
                     isSelected: Binding(
@@ -240,11 +247,20 @@ struct ServerConfigView: View {
                 )
             }
 
+            // Claude Code with scope picker
+            if availableClients.contains(where: { $0.type == .claudeCode }) {
+                ClaudeCodeScopeInstallSection(
+                    server: currentServer,
+                    selectedScopes: $selectedScopesForInstall,
+                    knownProjectPaths: appState.knownProjectPaths
+                )
+            }
+
             Button(action: installToSelectedClients) {
                 Label("Install to Selected", systemImage: "square.and.arrow.down")
             }
             .buttonStyle(.borderedProminent)
-            .disabled(selectedClientsForInstall.isEmpty)
+            .disabled(selectedClientsForInstall.isEmpty && selectedScopesForInstall.isEmpty)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -330,6 +346,38 @@ struct ServerConfigView: View {
                     steps[i].message = error.localizedDescription
                     installSteps = steps
                 }
+            }
+
+            // Install to selected Claude Code scopes
+            for scope in selectedScopesForInstall {
+                // Skip if already installed to this scope
+                if currentServer.claudeCodeScopes[scope] != nil {
+                    MCPLogger.ui.debug("Skipping scope \(scope.displayName, privacy: .public): already installed")
+                    continue
+                }
+
+                MCPLogger.ui.debug("Installing to Claude Code scope: \(scope.displayName, privacy: .public)")
+
+                do {
+                    // Get config from existing installation
+                    if let existingConfig = currentServer.primaryConfig ?? currentServer.claudeCodeScopes.values.first {
+                        try await appState.copyServerConfig(
+                            existingConfig,
+                            serverName: server.name,
+                            toClaudeCodeScope: scope
+                        )
+                        MCPLogger.ui.info("Installation to Claude Code scope \(scope.displayName, privacy: .public) succeeded")
+                    } else {
+                        MCPLogger.ui.warning("No config available to copy for scope \(scope.displayName, privacy: .public)")
+                    }
+                } catch {
+                    MCPLogger.ui.error("Installation to Claude Code scope \(scope.displayName, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
+                }
+            }
+
+            // Clear selections after installation
+            await MainActor.run {
+                selectedScopesForInstall.removeAll()
             }
 
             MCPLogger.ui.info("Installation process complete for '\(server.name, privacy: .public)'")

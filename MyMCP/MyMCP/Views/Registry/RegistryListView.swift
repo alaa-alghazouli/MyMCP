@@ -44,38 +44,57 @@ struct RegistryListView: View {
             SearchField(text: $viewModel.searchText, placeholder: "Search servers...")
                 .padding()
 
-            // Filter pills and sort picker
-            HStack {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        FilterPill(title: "All", isSelected: viewModel.selectedPackageType == nil) {
-                            viewModel.selectedPackageType = nil
-                        }
-
-                        ForEach(PackageRegistryType.allCases, id: \.self) { type in
-                            FilterPill(
-                                title: type.displayName,
-                                isSelected: viewModel.selectedPackageType == type
-                            ) {
-                                viewModel.selectedPackageType = type
-                            }
-                        }
+            // Filter and sort controls
+            HStack(spacing: 16) {
+                // Type filter
+                Menu {
+                    Button("All") { viewModel.selectedPackageType = nil }
+                    Divider()
+                    ForEach(PackageRegistryType.allCases, id: \.self) { type in
+                        Button(type.displayName) { viewModel.selectedPackageType = type }
                     }
-                    .padding(.leading)
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "line.3.horizontal.decrease")
+                        Text(viewModel.selectedPackageType?.displayName ?? "All")
+                        Image(systemName: "chevron.down")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    .font(.subheadline)
+                    .fontWeight(.medium)
                 }
+                .menuStyle(.borderlessButton)
 
-                // Sort picker
-                Picker("Sort", selection: $viewModel.sortOption) {
+                Divider()
+                    .frame(height: 16)
+
+                // Sort menu
+                Menu {
                     ForEach(SortOption.allCases) { option in
-                        Label(option.rawValue, systemImage: option.systemImage)
-                            .tag(option)
+                        Button {
+                            viewModel.sortOption = option
+                        } label: {
+                            Label(option.rawValue, systemImage: option.systemImage)
+                        }
                     }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up.arrow.down")
+                        Text(viewModel.sortOption.rawValue)
+                        Image(systemName: "chevron.down")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    .font(.subheadline)
+                    .fontWeight(.medium)
                 }
-                .pickerStyle(.menu)
-                .labelsHidden()
-                .frame(width: 140)
-                .padding(.trailing)
+                .menuStyle(.borderlessButton)
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+            .padding(.horizontal)
             .padding(.bottom, 8)
 
             Divider()

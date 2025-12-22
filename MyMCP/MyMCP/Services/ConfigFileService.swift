@@ -188,6 +188,32 @@ actor ConfigFileService {
         MCPLogger.config.info("Successfully copied '\(serverName, privacy: .public)' to \(client.type.displayName, privacy: .public)")
     }
 
+    /// Copy an existing server config to a specific Claude Code scope
+    func copyServerConfigToClaudeCodeScope(
+        config: InstalledServerConfig,
+        serverName: String,
+        scope: ClaudeCodeScope,
+        progress: ((InstallProgress) -> Void)? = nil
+    ) async throws {
+        MCPLogger.config.info("Copying server '\(serverName, privacy: .public)' to Claude Code scope: \(scope.displayName, privacy: .public)")
+
+        let configPath = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent(".claude.json")
+        MCPLogger.config.debug("Config path: \(configPath.path, privacy: .public)")
+
+        progress?(.generatingConfig)
+        let serverConfig = buildServerConfigDict(command: config.command, args: config.args, env: config.env)
+
+        try await installServerToClaudeCodeScope(
+            serverName: serverName,
+            serverConfig: serverConfig,
+            scope: scope,
+            configPath: configPath,
+            progress: progress
+        )
+
+        MCPLogger.config.info("Successfully copied '\(serverName, privacy: .public)' to Claude Code scope: \(scope.displayName, privacy: .public)")
+    }
+
     // MARK: - Enable/Disable Server Methods
 
     /// Enable a previously disabled server by re-adding it to the client config

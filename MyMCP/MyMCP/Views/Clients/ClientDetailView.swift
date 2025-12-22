@@ -13,21 +13,21 @@ struct ClientDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                header
-
-                Divider()
-
-                overviewSection
+                installedServersSection
 
                 if let configPath = client.configPath {
                     configFileSection(configPath)
                 }
-
-                installedServersSection
             }
             .padding()
         }
         .navigationTitle(client.type.displayName)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Image(systemName: client.type.systemIconFallback)
+                    .foregroundStyle(client.type.accentColor)
+            }
+        }
         .confirmationDialog(
             "Uninstall Server",
             isPresented: $showUninstallConfirm,
@@ -47,50 +47,6 @@ struct ClientDetailView: View {
                 steps: $uninstallSteps,
                 onDismiss: { showProgressSheet = false }
             )
-        }
-    }
-
-    private var header: some View {
-        HStack(spacing: 16) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(client.type.accentColor.opacity(0.15))
-                Image(systemName: client.type.systemIconFallback)
-                    .font(.system(size: 32))
-                    .foregroundStyle(client.type.accentColor)
-            }
-            .frame(width: 64, height: 64)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(client.type.displayName)
-                    .font(.title2)
-                    .fontWeight(.bold)
-            }
-
-            Spacer()
-
-            if client.isInstalled {
-                Button("Open \(client.type.displayName)") {
-                    openClient()
-                }
-                .buttonStyle(.bordered)
-            }
-        }
-    }
-
-    private var overviewSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Overview")
-                .font(.headline)
-
-            HStack(spacing: 16) {
-                StatusCard(
-                    title: "Servers",
-                    value: "\(client.installedServers.count)",
-                    color: .blue,
-                    icon: "server.rack"
-                )
-            }
         }
     }
 
@@ -202,7 +158,7 @@ struct ClientDetailView: View {
                 .cardStyle(padding: 0)
             } else {
                 // Enabled servers
-                ForEach(Array(client.installedServers.values.sorted(by: { $0.name < $1.name })), id: \.name) { config in
+                ForEach(Array(client.installedServers.values.sorted(by: { $0.name < $1.name })), id: \.id) { config in
                     ClientServerRow(
                         config: config,
                         clientType: client.type,
@@ -248,13 +204,6 @@ struct ClientDetailView: View {
                     )
                 }
             }
-        }
-    }
-
-    private func openClient() {
-        if let bundleId = client.type.bundleIdentifiers.first,
-           let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) {
-            NSWorkspace.shared.open(url)
         }
     }
 
@@ -318,9 +267,28 @@ struct ClientServerRow: View {
                         .font(.headline)
                         .foregroundStyle(isEnabled ? .primary : .secondary)
 
+                    // Scope badge for Claude Code servers
+                    if clientType == .claudeCode, let scope = config.claudeCodeScope {
+                        ScopeBadge(scope: scope, showProjectName: false, size: .small)
+                    }
+
                     if !isEnabled {
                         DisabledBadge()
                     }
+                }
+
+                // Project name subtitle for Claude Code scoped servers
+                if clientType == .claudeCode,
+                   let scope = config.claudeCodeScope,
+                   let projectName = scope.projectName {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder")
+                            .font(.system(size: 10))
+                        Text(projectName)
+                            .lineLimit(1)
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
                 }
 
                 // Description from registry
