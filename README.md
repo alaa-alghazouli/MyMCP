@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="icon.png" width="128" height="128" alt="MyMCP Icon">
+</p>
+
 # MyMCP
 
 A native macOS application for managing Model Context Protocol (MCP) servers across multiple AI clients.

@@ -88,9 +88,7 @@ struct SidebarClientRow: View {
             Spacer()
 
             if client.installedServers.count > 0 {
-                Text("\(client.installedServers.count)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                CountBadge(count: client.installedServers.count)
             }
         }
     }

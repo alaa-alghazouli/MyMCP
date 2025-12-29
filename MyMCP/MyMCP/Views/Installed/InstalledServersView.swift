@@ -137,7 +137,14 @@ struct InstalledServersView: View {
                 uninstallSteps = steps
 
                 do {
-                    try await appState.uninstallServer(server.name, fromClient: clientType)
+                    // For Claude Code, uninstall from all scopes
+                    if clientType == .claudeCode {
+                        for (scope, _) in server.claudeCodeScopes {
+                            try await appState.uninstallServer(server.name, fromClient: clientType, claudeCodeScope: scope)
+                        }
+                    } else {
+                        try await appState.uninstallServer(server.name, fromClient: clientType)
+                    }
                     var steps = uninstallSteps
                     steps[i].status = .success
                     steps[i].message = "Removed successfully"

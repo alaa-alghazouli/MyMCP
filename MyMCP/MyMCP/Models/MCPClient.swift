@@ -38,12 +38,7 @@ enum MCPClientType: String, CaseIterable, Identifiable, Codable {
     }
 
     var systemIconFallback: String {
-        switch self {
-        case .claudeDesktop, .claudeCode: return "brain"
-        case .cursor, .vscode, .windsurf: return "curlybraces"
-        case .geminiCLI: return "sparkles"
-        case .openaiCodex: return "terminal"
-        }
+        "server.rack"
     }
 
     var accentColor: Color {

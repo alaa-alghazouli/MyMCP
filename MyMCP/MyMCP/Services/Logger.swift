@@ -37,6 +37,9 @@ struct MCPLogger {
     /// Logging for service operations (API calls, caching)
     static let services = Logger(subsystem: subsystem, category: "services")
 
+    /// Logging for server matching (registry <-> installed)
+    static let matching = Logger(subsystem: subsystem, category: "matching")
+
     // MARK: - Timing Utilities
 
     /// Execute and log an async operation with timing information

@@ -573,13 +573,35 @@ class AppState: ObservableObject {
 
     // MARK: - Private Helpers
 
-    /// Find a registry server by name using fuzzy matching
+    /// Find a registry server by name using exact matching with controlled fallbacks
     private func findRegistryServer(byName name: String) -> MCPServer? {
-        registryServers.first {
-            $0.name.hasSuffix(name) ||
-            $0.displayName.lowercased() == name.lowercased() ||
-            $0.name.lowercased().contains(name.lowercased())
+        // 1. Exact match on primary package identifier
+        if let server = registryServers.first(where: {
+            $0.primaryPackage?.identifier == name
+        }) {
+            return server
         }
+
+        // 2. Exact match on short package name (after /)
+        if let server = registryServers.first(where: {
+            ($0.primaryPackage?.identifier.components(separatedBy: "/").last ?? "") == name
+        }) {
+            return server
+        }
+
+        // 3. Exact display name match (case-insensitive)
+        if let server = registryServers.first(where: {
+            $0.displayName.lowercased() == name.lowercased()
+        }) {
+            return server
+        }
+
+        // 4. Last resort: suffix match on full name (for backwards compatibility)
+        if let server = registryServers.first(where: { $0.name.hasSuffix("/\(name)") }) {
+            return server
+        }
+
+        return nil
     }
 }
 

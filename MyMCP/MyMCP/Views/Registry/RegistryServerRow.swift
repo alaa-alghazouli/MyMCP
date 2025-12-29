@@ -6,9 +6,24 @@ struct RegistryServerRow: View {
     var metadata: GitHubMetadata?
 
     private var installedClients: [MCPClientType] {
-        appState.installedServers
-            .first { $0.name == server.displayName || server.name.lowercased().contains($0.name.lowercased()) }?
-            .installedClientTypes ?? []
+        // Match installed server to registry server using exact matching on package identifier
+        if let primaryPkg = server.primaryPackage {
+            // Try exact match on full package identifier first
+            if let match = appState.installedServers.first(where: { $0.name == primaryPkg.identifier }) {
+                return match.installedClientTypes
+            }
+            // Fallback: check if installed name matches the short package name (after /)
+            let shortName = primaryPkg.identifier.components(separatedBy: "/").last ?? primaryPkg.identifier
+            if let match = appState.installedServers.first(where: { $0.name == shortName }) {
+                return match.installedClientTypes
+            }
+        }
+        // Last resort: exact display name match (case-insensitive)
+        if let match = appState.installedServers.first(where: { $0.name.lowercased() == server.displayName.lowercased() }) {
+            return match.installedClientTypes
+        }
+
+        return []
     }
 
     var body: some View {

@@ -371,13 +371,29 @@ struct ServerConfigView: View {
 
             do {
                 MCPLogger.ui.debug("Calling appState.uninstallServer...")
-                try await appState.uninstallServer(server.name, fromClient: clientType) { progress in
-                    // Update UI with real-time progress from the callback
-                    Task { @MainActor in
-                        MCPLogger.ui.debug("Progress update: \(progress.message, privacy: .public)")
-                        var steps = uninstallSteps
-                        steps[0].message = progress.message
-                        uninstallSteps = steps
+
+                // For Claude Code, uninstall from all scopes
+                if clientType == .claudeCode {
+                    for (scope, _) in server.claudeCodeScopes {
+                        MCPLogger.ui.debug("Uninstalling from scope: \(scope.displayName, privacy: .public)")
+                        try await appState.uninstallServer(server.name, fromClient: clientType, claudeCodeScope: scope) { progress in
+                            Task { @MainActor in
+                                MCPLogger.ui.debug("Progress update: \(progress.message, privacy: .public)")
+                                var steps = uninstallSteps
+                                steps[0].message = progress.message
+                                uninstallSteps = steps
+                            }
+                        }
+                    }
+                } else {
+                    try await appState.uninstallServer(server.name, fromClient: clientType) { progress in
+                        // Update UI with real-time progress from the callback
+                        Task { @MainActor in
+                            MCPLogger.ui.debug("Progress update: \(progress.message, privacy: .public)")
+                            var steps = uninstallSteps
+                            steps[0].message = progress.message
+                            uninstallSteps = steps
+                        }
                     }
                 }
 

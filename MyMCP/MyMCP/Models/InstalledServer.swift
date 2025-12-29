@@ -67,7 +67,11 @@ struct UnifiedInstalledServer: Identifiable, Hashable, Searchable {
     }
 
     var installedClientTypes: [MCPClientType] {
-        Array(clients.keys).sorted { $0.displayName < $1.displayName }
+        var types = Set(clients.keys)
+        if !claudeCodeScopes.isEmpty {
+            types.insert(.claudeCode)
+        }
+        return Array(types).sorted { $0.displayName < $1.displayName }
     }
 
     /// All clients that have ever had this server (enabled + disabled), excluding Claude Code

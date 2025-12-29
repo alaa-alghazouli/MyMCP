@@ -19,6 +19,11 @@ struct ServerDetailView: View {
         server.primaryPackage?.environmentVariables?.filter { $0.isSecret == true } ?? []
     }
 
+    /// Whether this server can be installed (has package info)
+    private var canInstall: Bool {
+        server.primaryPackage != nil
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -199,8 +204,18 @@ struct ServerDetailView: View {
             Text("Packages")
                 .font(.headline)
 
-            ForEach(server.packages) { package in
-                PackageInfoCard(package: package)
+            if server.packages.isEmpty {
+                Text("No packages available for this server.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .cornerRadius(8)
+            } else {
+                ForEach(server.packages) { package in
+                    PackageInfoCard(package: package)
+                }
             }
         }
     }
@@ -278,6 +293,25 @@ struct ServerDetailView: View {
                 envVarsSection(requiredEnvVars)
             }
 
+            // Warning for servers without package info
+            if !canInstall {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Cannot Install")
+                            .fontWeight(.medium)
+                        Text("This server doesn't have package information in the registry and cannot be installed automatically.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(8)
+            }
+
             // Install button
             HStack {
                 Button(action: installServer) {
@@ -285,7 +319,7 @@ struct ServerDetailView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-                .disabled(selectedClients.isEmpty || serverName.isEmpty)
+                .disabled(selectedClients.isEmpty || serverName.isEmpty || !canInstall)
 
                 if !selectedClients.isEmpty {
                     Text("Installing to \(selectedClients.count) \(selectedClients.count == 1 ? "client" : "clients")")
