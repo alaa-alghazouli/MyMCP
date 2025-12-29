@@ -313,11 +313,21 @@ class AppState: ObservableObject {
     ) async throws {
         MCPLogger.appState.info("Disabling server '\(serverName, privacy: .public)' for \(clientType.displayName, privacy: .public)")
 
-        guard let client = clients.first(where: { $0.type == clientType }),
-              let config = client.installedServers[serverName] else {
-            MCPLogger.appState.error("Server '\(serverName, privacy: .public)' not found in \(clientType.displayName, privacy: .public)")
-            progress?(.failed("Server not found in client"))
+        guard let client = clients.first(where: { $0.type == clientType }) else {
+            MCPLogger.appState.error("Client not found: \(clientType.displayName, privacy: .public)")
+            progress?(.failed("Client not found"))
             throw AppError.clientNotFound
+        }
+
+        // Check if server exists in client config
+        guard let config = client.installedServers[serverName] else {
+            // Server not in config - it was already removed externally
+            // Just refresh state so UI syncs with actual config
+            MCPLogger.appState.info("Server '\(serverName, privacy: .public)' already removed from \(clientType.displayName, privacy: .public) config - refreshing state")
+            progress?(.refreshingClients)
+            await discoverClients()
+            progress?(.completed)
+            return
         }
 
         // 1. Store the config in our disabled servers store FIRST
@@ -452,9 +462,13 @@ class AppState: ObservableObject {
         // Find the config for this scope using composite key
         let compositeKey = "\(serverName)_\(scope.id)"
         guard let config = client.installedServers[compositeKey] else {
-            MCPLogger.appState.error("Server '\(serverName, privacy: .public)' not found in scope: \(scope.displayName, privacy: .public)")
-            progress?(.failed("Server not found in scope"))
-            throw AppError.clientNotFound
+            // Server not in config - it was already removed externally
+            // Just refresh state so UI syncs with actual config
+            MCPLogger.appState.info("Claude Code server '\(serverName, privacy: .public)' already removed from scope \(scope.displayName, privacy: .public) - refreshing state")
+            progress?(.refreshingClients)
+            await discoverClients()
+            progress?(.completed)
+            return
         }
 
         // 1. Store the config in disabled servers store

@@ -77,9 +77,15 @@ struct ServerConfigView: View {
             ServerIconView(url: server.registryServer?.iconURL, size: 64)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(server.name)
-                    .font(.title2)
-                    .fontWeight(.bold)
+                HStack(spacing: 6) {
+                    Text(server.name)
+                        .font(.title2)
+                        .fontWeight(.bold)
+
+                    ForEach(server.registryServer?.uniqueTransportTypes ?? [], id: \.self) { transport in
+                        TransportTypeBadge(type: transport)
+                    }
+                }
 
                 if let description = server.registryServer?.description {
                     Text(description)

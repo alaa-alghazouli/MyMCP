@@ -20,6 +20,24 @@ struct ColoredBadge: View {
     }
 }
 
+/// Badge for displaying MCP transport type with color coding
+struct TransportTypeBadge: View {
+    let type: TransportType
+
+    private var color: Color {
+        switch type {
+        case .stdio: return .green
+        case .sse: return .orange
+        case .streamableHttp: return .blue
+        case .unknown: return .gray
+        }
+    }
+
+    var body: some View {
+        ColoredBadge(text: type.displayName, color: color)
+    }
+}
+
 #Preview {
     HStack {
         ColoredBadge(text: "npm", color: .red)

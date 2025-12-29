@@ -67,23 +67,6 @@ struct RegistryServerRow: View {
     }
 }
 
-struct TransportTypeBadge: View {
-    let type: TransportType
-
-    private var color: Color {
-        switch type {
-        case .stdio: return .green
-        case .sse: return .orange
-        case .streamableHttp: return .blue
-        case .unknown: return .gray
-        }
-    }
-
-    var body: some View {
-        ColoredBadge(text: type.displayName, color: color)
-    }
-}
-
 struct PackageTypeBadge: View {
     let type: PackageRegistryType
 

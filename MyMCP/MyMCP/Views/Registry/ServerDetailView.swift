@@ -14,6 +14,11 @@ struct ServerDetailView: View {
     @State private var selectedClaudeCodeScope: ClaudeCodeScope = .global
     @State private var knownProjectPaths: [String] = []
 
+    /// Auth credentials required by this server (env vars marked as secret)
+    private var authCredentials: [MCPEnvironmentVariable] {
+        server.primaryPackage?.environmentVariables?.filter { $0.isSecret == true } ?? []
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -31,6 +36,10 @@ struct ServerDetailView: View {
                 }
 
                 packagesSection
+
+                if !authCredentials.isEmpty {
+                    authenticationSection
+                }
 
                 Divider()
 
@@ -69,13 +78,29 @@ struct ServerDetailView: View {
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)
 
-                if let version = server.version {
-                    Text("v\(version)")
+                HStack(spacing: 6) {
+                    if let version = server.version {
+                        Text("v\(version)")
+                            .font(.caption)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Color(nsColor: .controlBackgroundColor))
+                            .cornerRadius(4)
+                    }
+
+                    if !authCredentials.isEmpty {
+                        HStack(spacing: 4) {
+                            Image(systemName: "lock.fill")
+                                .font(.caption2)
+                            Text("\(authCredentials.count) credential\(authCredentials.count == 1 ? "" : "s")")
+                        }
                         .font(.caption)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 2)
-                        .background(Color(nsColor: .controlBackgroundColor))
+                        .background(Color.orange.opacity(0.15))
+                        .foregroundStyle(.orange)
                         .cornerRadius(4)
+                    }
                 }
             }
 
@@ -176,6 +201,17 @@ struct ServerDetailView: View {
 
             ForEach(server.packages) { package in
                 PackageInfoCard(package: package)
+            }
+        }
+    }
+
+    private var authenticationSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Authentication")
+                .font(.headline)
+
+            ForEach(authCredentials) { credential in
+                AuthCredentialCard(credential: credential)
             }
         }
     }
@@ -480,6 +516,43 @@ struct PackageInfoCard: View {
                         .foregroundStyle(.secondary)
                     Text(transport.type.rawValue)
                         .font(.system(.body, design: .monospaced))
+                }
+                .font(.caption)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .cornerRadius(8)
+    }
+}
+
+struct AuthCredentialCard: View {
+    let credential: MCPEnvironmentVariable
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Image(systemName: "lock.fill")
+                    .foregroundStyle(.orange)
+
+                Text(credential.name)
+                    .font(.system(.body, design: .monospaced))
+                    .fontWeight(.medium)
+            }
+
+            if let description = credential.description {
+                Text(description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if let format = credential.format {
+                HStack(spacing: 4) {
+                    Text("Format:")
+                        .foregroundStyle(.tertiary)
+                    Text(format)
+                        .font(.system(.caption, design: .monospaced))
                 }
                 .font(.caption)
             }

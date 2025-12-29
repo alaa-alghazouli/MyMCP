@@ -13,12 +13,6 @@ struct ClientDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                header
-
-                Divider()
-
-                overviewSection
-
                 if let configPath = client.configPath {
                     configFileSection(configPath)
                 }
@@ -47,50 +41,6 @@ struct ClientDetailView: View {
                 steps: $uninstallSteps,
                 onDismiss: { showProgressSheet = false }
             )
-        }
-    }
-
-    private var header: some View {
-        HStack(spacing: 16) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(client.type.accentColor.opacity(0.15))
-                Image(systemName: client.type.systemIconFallback)
-                    .font(.system(size: 32))
-                    .foregroundStyle(client.type.accentColor)
-            }
-            .frame(width: 64, height: 64)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(client.type.displayName)
-                    .font(.title2)
-                    .fontWeight(.bold)
-            }
-
-            Spacer()
-
-            if client.isInstalled {
-                Button("Open \(client.type.displayName)") {
-                    openClient()
-                }
-                .buttonStyle(.bordered)
-            }
-        }
-    }
-
-    private var overviewSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Overview")
-                .font(.headline)
-
-            HStack(spacing: 16) {
-                StatusCard(
-                    title: "Servers",
-                    value: "\(client.installedServers.count)",
-                    color: .blue,
-                    icon: "server.rack"
-                )
-            }
         }
     }
 
@@ -251,13 +201,6 @@ struct ClientDetailView: View {
         }
     }
 
-    private func openClient() {
-        if let bundleId = client.type.bundleIdentifiers.first,
-           let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) {
-            NSWorkspace.shared.open(url)
-        }
-    }
-
     // MARK: - Registry Server Lookup
 
     private func unifiedServer(for serverName: String) -> UnifiedInstalledServer? {
@@ -317,6 +260,11 @@ struct ClientServerRow: View {
                     Text(config.name)
                         .font(.headline)
                         .foregroundStyle(isEnabled ? .primary : .secondary)
+
+                    // Transport badge
+                    if let transport = registryServer?.uniqueTransportTypes.first {
+                        TransportTypeBadge(type: transport)
+                    }
 
                     if !isEnabled {
                         DisabledBadge()

@@ -24,6 +24,11 @@ struct InstalledServerRow: View {
                         .font(.headline)
                         .lineLimit(1)
 
+                    // Transport type badges
+                    ForEach(server.registryServer?.uniqueTransportTypes ?? [], id: \.self) { transport in
+                        TransportTypeBadge(type: transport)
+                    }
+
                     // Claude Code scope indicators
                     if server.hasClaudeCodeInstallations {
                         claudeCodeScopeIndicators
