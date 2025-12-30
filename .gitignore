@@ -1,0 +1,52 @@
+# Build outputs
+*.app
+*.zip
+DerivedData/
+.swiftpm/
+.build/
+build/
+
+# Versioned app bundles
+MyMCP[0-9]*/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Xcode user data
+xcuserdata/
+*.xcworkspace/xcuserdata/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+!default.pbxuser
+!default.mode1v3
+!default.mode2v3
+!default.perspectivev3
+
+# Xcode state
+*.xccheckout
+*.moved-aside
+*.xcuserstate
+
+# OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# CocoaPods (if used later)
+Pods/
+
+# Carthage (if used later)
+Carthage/Build/
+
+# Swift Package Manager
+.build/
+Package.resolved
