@@ -38,7 +38,7 @@ enum MCPClientType: String, CaseIterable, Identifiable, Codable {
     }
 
     var systemIconFallback: String {
-        "server.rack"
+        "terminal"
     }
 
     var accentColor: Color {
