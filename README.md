@@ -4,7 +4,7 @@
 
 # MyMCP
 
-A native macOS application for managing Model Context Protocol (MCP) servers across multiple AI clients.
+A native macOS application for discovering, installing and managing MCP servers.
 
 ## What is MyMCP?
 
