@@ -17,7 +17,7 @@ struct MyMCPApp: App {
                 options.dsn = sentryDSN
                 options.debug = false
                 options.tracesSampleRate = 1.0
-                options.sendDefaultPii = true
+                options.sendDefaultPii = false
                 options.attachStacktrace = true
 
                 #if DEBUG
