@@ -1,0 +1,24 @@
+name: Build MyMCP
+on: workflow_dispatch  # This lets you run it manually with a button click
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build App
+        # We disable code signing so it builds without an Apple Developer ID
+        run: |
+          xcodebuild -scheme MyMCP \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload App
+        uses: actions/upload-artifact@v4
+        with:
+          name: MyMCP-App
+          path: build/Build/Products/Release/MyMCP.app
