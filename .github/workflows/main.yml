@@ -1,45 +1,41 @@
-name: Build MyMCP (Latest & Signed)
+name: Build Fix (Skip Sentry)
 on: workflow_dispatch
 
 jobs:
   build_and_package:
-    runs-on: macos-14  # We force the newest macOS runner (Sonoma)
+    runs-on: macos-14
+    
+    # 1. GLOBAL FIX: Tell Sentry to stop trying to upload
+    env:
+      SENTRY_DISABLE_AUTO_UPLOAD: true
+      SENTRY_NO_PROGRESS_BAR: true
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # ---------------------------------------------------------
-      # STEP 1: Build the App
-      # ---------------------------------------------------------
       - name: Build App
         run: |
           cd MyMCP
           
-          # We REMOVED the "MACOSX_DEPLOYMENT_TARGET" line. 
-          # We let the project decide its own version.
+          # Clean any weird file attributes that confuse the signer
+          xattr -cr .
+
+          # Build with Sentry Upload Disabled
           xcodebuild -scheme MyMCP \
             -configuration Release \
             -derivedDataPath build \
-            -destination 'platform=macOS' \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED="NO" \
             CODE_SIGNING_ALLOWED="YES" \
             CODE_SIGN_STYLE="Manual"
 
-      # ---------------------------------------------------------
-      # STEP 2: Package into DMG
-      # ---------------------------------------------------------
       - name: Package into DMG
         run: |
           cd MyMCP/build/Build/Products/Release
-          
-          # Create DMG
           npx create-dmg MyMCP.app --overwrite || true
           mv *.dmg MyMCP_Installer.dmg
 
-      # ---------------------------------------------------------
-      # STEP 3: Upload Result
-      # ---------------------------------------------------------
       - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
