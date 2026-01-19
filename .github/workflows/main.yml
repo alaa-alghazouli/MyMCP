@@ -1,15 +1,11 @@
-name: Build MyMCP (Xcode 16 Fix)
+name: Build MyMCP (Universal Intel Fix)
 on: workflow_dispatch
 
 jobs:
   build_and_package:
-    # ---------------------------------------------------------
-    # CRITICAL FIX: We use 'macos-15' to get Xcode 16 support
-    # This solves the "Project Format 77" error.
-    # ---------------------------------------------------------
+    # We use macos-15 because the project requires Xcode 16
     runs-on: macos-15
     
-    # Keep the Sentry fix so it doesn't crash later
     env:
       SENTRY_DISABLE_AUTO_UPLOAD: true
       SENTRY_NO_PROGRESS_BAR: true
@@ -18,17 +14,19 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Build App
+      - name: Build Universal App (Intel + Apple Silicon)
         run: |
           cd MyMCP
-          
-          # Clean attributes
           xattr -cr .
 
-          # Build using Ad-Hoc signing (Fixes Exit Code 65)
+          # CRITICAL FIXES FOR INTEL MACS:
+          # 1. ARCHS="x86_64 arm64" -> Includes both Intel and M1/M2 code
+          # 2. ONLY_ACTIVE_ARCH=NO  -> Prevents it from skipping Intel
           xcodebuild -scheme MyMCP \
             -configuration Release \
             -derivedDataPath build \
+            ARCHS="x86_64 arm64" \
+            ONLY_ACTIVE_ARCH=NO \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED="NO" \
             CODE_SIGNING_ALLOWED="YES" \
@@ -40,10 +38,10 @@ jobs:
           
           # Create DMG
           npx create-dmg MyMCP.app --overwrite || true
-          mv *.dmg MyMCP_Installer.dmg
+          mv *.dmg MyMCP_Universal_Installer.dmg
 
       - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
-          name: MyMCP-Installer
-          path: MyMCP/build/Build/Products/Release/MyMCP_Installer.dmg
+          name: MyMCP-Universal-Installer
+          path: MyMCP/build/Build/Products/Release/MyMCP_Universal_Installer.dmg
