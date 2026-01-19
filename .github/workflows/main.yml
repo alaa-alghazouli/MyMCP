@@ -1,22 +1,22 @@
-name: FINAL FIX (Ad-Hoc Signing)
+name: Build & Create DMG (Final)
 on: workflow_dispatch
 
 jobs:
-  build:
-    name: Build with Ad-Hoc Sign
+  build_and_package:
     runs-on: macos-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # ---------------------------------------------------------
+      # STEP 1: Build the App (Fixing Exit Code 65 & Path)
+      # ---------------------------------------------------------
       - name: Build App (Ad-Hoc Signed)
         run: |
-          # 1. Enter the project folder
+          # Go into the subfolder
           cd MyMCP
           
-          # 2. Build with Ad-Hoc Signing ("-")
-          # This fixes the "Exit Code 65" by satisfying the Apple Silicon requirement
+          # Build with fake "Ad-Hoc" signature so it doesn't crash
           xcodebuild -scheme MyMCP \
             -configuration Release \
             -derivedDataPath build \
@@ -25,18 +25,28 @@ jobs:
             ONLY_ACTIVE_ARCH=NO \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED="NO" \
-            CODE_SIGNING_ALLOWED="YES"
+            CODE_SIGNING_ALLOWED="YES" \
+            CODE_SIGN_STYLE="Manual"
 
-      - name: Zip with Symlinks
+      # ---------------------------------------------------------
+      # STEP 2: Create DMG using sindresorhus/create-dmg
+      # ---------------------------------------------------------
+      - name: Package into DMG
         run: |
-          # Go to the specific build output folder
+          # Go to the folder where the app was built
           cd MyMCP/build/Build/Products/Release
           
-          # Zip it properly to prevent "Damaged App" error
-          zip -r -y MyMCP_AdHoc.zip MyMCP.app
+          # Create the DMG (using npx)
+          npx create-dmg MyMCP.app --overwrite || true
+          
+          # Rename for clarity
+          mv *.dmg MyMCP_Installer.dmg
 
-      - name: Upload Result
+      # ---------------------------------------------------------
+      # STEP 3: Upload the DMG
+      # ---------------------------------------------------------
+      - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
-          name: MyMCP-App-Fixed
-          path: MyMCP/build/Build/Products/Release/MyMCP_AdHoc.zip
+          name: MyMCP-Installer
+          path: MyMCP/build/Build/Products/Release/MyMCP_Installer.dmg
