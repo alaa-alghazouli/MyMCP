@@ -1,0 +1,33 @@
+name: Build MyMCP (Universal & Compatible)
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build App (Universal & MacOS 12+)
+        run: |
+          cd MyMCP
+          # We force macOS 12.0 target and Universal (Intel + M1/M2/M3) architecture
+          xcodebuild -scheme MyMCP \
+            -configuration Release \
+            -derivedDataPath build \
+            MACOSX_DEPLOYMENT_TARGET=12.0 \
+            ARCHS="x86_64 arm64" \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Zip with Symlinks
+        run: |
+          cd MyMCP/build/Build/Products/Release
+          zip -r -y MyMCP_Universal.zip MyMCP.app
+
+      - name: Upload Zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: MyMCP-Universal-App
+          path: MyMCP/build/Build/Products/Release/MyMCP_Universal.zip
