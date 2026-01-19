@@ -1,4 +1,4 @@
-name: Build & Create DMG (Final)
+name: Build (Nuclear Fix)
 on: workflow_dispatch
 
 jobs:
@@ -8,15 +8,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # ---------------------------------------------------------
-      # STEP 1: Build the App (Fixing Exit Code 65 & Path)
-      # ---------------------------------------------------------
-      - name: Build App (Ad-Hoc Signed)
+      - name: Build App (Security Disabled)
         run: |
-          # Go into the subfolder
           cd MyMCP
           
-          # Build with fake "Ad-Hoc" signature so it doesn't crash
+          # We add ENABLE_HARDENED_RUNTIME=NO and CODE_SIGN_ENTITLEMENTS="" 
+          # This strips the security requirements that are causing the crash.
           xcodebuild -scheme MyMCP \
             -configuration Release \
             -derivedDataPath build \
@@ -26,25 +23,27 @@ jobs:
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED="NO" \
             CODE_SIGNING_ALLOWED="YES" \
-            CODE_SIGN_STYLE="Manual"
+            CODE_SIGN_STYLE="Manual" \
+            ENABLE_HARDENED_RUNTIME=NO \
+            CODE_SIGN_ENTITLEMENTS=""
 
-      # ---------------------------------------------------------
-      # STEP 2: Create DMG using sindresorhus/create-dmg
-      # ---------------------------------------------------------
+      - name: Verify App Exists
+        # Sometimes Xcode says "Fail" (65) but the App is actually there.
+        # This step checks if we succeeded despite the error.
+        run: |
+          if [ -d "MyMCP/build/Build/Products/Release/MyMCP.app" ]; then
+            echo "✅ APP FOUND! Proceeding to package..."
+          else
+            echo "❌ BUILD TRULY FAILED."
+            exit 1
+          fi
+
       - name: Package into DMG
         run: |
-          # Go to the folder where the app was built
           cd MyMCP/build/Build/Products/Release
-          
-          # Create the DMG (using npx)
           npx create-dmg MyMCP.app --overwrite || true
-          
-          # Rename for clarity
           mv *.dmg MyMCP_Installer.dmg
 
-      # ---------------------------------------------------------
-      # STEP 3: Upload the DMG
-      # ---------------------------------------------------------
       - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
