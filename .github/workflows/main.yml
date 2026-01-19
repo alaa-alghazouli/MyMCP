@@ -1,49 +1,45 @@
-name: Build (Nuclear Fix)
+name: Build MyMCP (Latest & Signed)
 on: workflow_dispatch
 
 jobs:
   build_and_package:
-    runs-on: macos-latest
+    runs-on: macos-14  # We force the newest macOS runner (Sonoma)
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Build App (Security Disabled)
+      # ---------------------------------------------------------
+      # STEP 1: Build the App
+      # ---------------------------------------------------------
+      - name: Build App
         run: |
           cd MyMCP
           
-          # We add ENABLE_HARDENED_RUNTIME=NO and CODE_SIGN_ENTITLEMENTS="" 
-          # This strips the security requirements that are causing the crash.
+          # We REMOVED the "MACOSX_DEPLOYMENT_TARGET" line. 
+          # We let the project decide its own version.
           xcodebuild -scheme MyMCP \
             -configuration Release \
             -derivedDataPath build \
-            MACOSX_DEPLOYMENT_TARGET=13.0 \
-            ARCHS="x86_64 arm64" \
-            ONLY_ACTIVE_ARCH=NO \
+            -destination 'platform=macOS' \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED="NO" \
             CODE_SIGNING_ALLOWED="YES" \
-            CODE_SIGN_STYLE="Manual" \
-            ENABLE_HARDENED_RUNTIME=NO \
-            CODE_SIGN_ENTITLEMENTS=""
+            CODE_SIGN_STYLE="Manual"
 
-      - name: Verify App Exists
-        # Sometimes Xcode says "Fail" (65) but the App is actually there.
-        # This step checks if we succeeded despite the error.
-        run: |
-          if [ -d "MyMCP/build/Build/Products/Release/MyMCP.app" ]; then
-            echo "✅ APP FOUND! Proceeding to package..."
-          else
-            echo "❌ BUILD TRULY FAILED."
-            exit 1
-          fi
-
+      # ---------------------------------------------------------
+      # STEP 2: Package into DMG
+      # ---------------------------------------------------------
       - name: Package into DMG
         run: |
           cd MyMCP/build/Build/Products/Release
+          
+          # Create DMG
           npx create-dmg MyMCP.app --overwrite || true
           mv *.dmg MyMCP_Installer.dmg
 
+      # ---------------------------------------------------------
+      # STEP 3: Upload Result
+      # ---------------------------------------------------------
       - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
