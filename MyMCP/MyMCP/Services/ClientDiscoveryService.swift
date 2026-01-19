@@ -217,6 +217,12 @@ actor ClientDiscoveryService {
                 servers = parseServersDictionary(serversDict)
             }
 
+        case .antigravity:
+            // Antigravity uses standard mcpServers key
+            if let serversDict = json["mcpServers"] as? [String: Any] {
+                servers = parseServersDictionary(serversDict)
+            }
+
         case .openaiCodex:
             // Should not reach here - handled by TOML parser
             break

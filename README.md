@@ -30,6 +30,7 @@ MyMCP automatically detects and manages servers for:
 | Windsurf | JSON | `~/.codeium/windsurf/mcp_config.json` |
 | Gemini CLI | JSON | `~/.gemini/settings.json` |
 | OpenAI Codex | TOML | `~/.codex/config.toml` |
+| Antigravity | JSON | `~/.gemini/antigravity/mcp_config.json` |
 
 ## Features
 

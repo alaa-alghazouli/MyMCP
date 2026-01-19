@@ -10,6 +10,7 @@ enum MCPClientType: String, CaseIterable, Identifiable, Codable {
     case windsurf = "windsurf"
     case geminiCLI = "gemini_cli"
     case openaiCodex = "openai_codex"
+    case antigravity = "antigravity"
 
     var id: String { rawValue }
 
@@ -22,6 +23,7 @@ enum MCPClientType: String, CaseIterable, Identifiable, Codable {
         case .windsurf: return "Windsurf"
         case .geminiCLI: return "Gemini CLI"
         case .openaiCodex: return "OpenAI Codex"
+        case .antigravity: return "Antigravity"
         }
     }
 
@@ -34,6 +36,7 @@ enum MCPClientType: String, CaseIterable, Identifiable, Codable {
         case .windsurf: return "windsurf_icon"
         case .geminiCLI: return "gemini_icon"
         case .openaiCodex: return "openai_icon"
+        case .antigravity: return "antigravity_icon"
         }
     }
 
@@ -49,6 +52,7 @@ enum MCPClientType: String, CaseIterable, Identifiable, Codable {
         case .windsurf: return .green
         case .geminiCLI: return .blue
         case .openaiCodex: return .mint
+        case .antigravity: return .purple
         }
     }
 
@@ -78,6 +82,8 @@ enum MCPClientType: String, CaseIterable, Identifiable, Codable {
             return [".codeium/windsurf/mcp_config.json"]
         case .geminiCLI:
             return [".gemini/settings.json"]
+        case .antigravity:
+            return [".gemini/antigravity/mcp_config.json"]
         case .openaiCodex:
             return [".codex/config.toml"]
         }
@@ -91,6 +97,7 @@ enum MCPClientType: String, CaseIterable, Identifiable, Codable {
         case .cursor: return ["com.todesktop.230313mzl4w4u92"]
         case .vscode: return ["com.microsoft.VSCode"]
         case .windsurf: return ["com.codeium.windsurf"]
+        case .antigravity: return ["com.google.antigravity"]
         case .geminiCLI: return []  // CLI tool
         case .openaiCodex: return []  // CLI tool
         }
@@ -105,6 +112,7 @@ enum MCPClientType: String, CaseIterable, Identifiable, Codable {
         case .vscode: return ["Code"]
         case .windsurf: return ["Windsurf"]
         case .geminiCLI: return ["gemini"]
+        case .antigravity: return ["antigravity"]
         case .openaiCodex: return ["codex"]
         }
     }
@@ -112,7 +120,7 @@ enum MCPClientType: String, CaseIterable, Identifiable, Codable {
     /// The key used in the config file to store MCP servers
     var configKey: String {
         switch self {
-        case .claudeDesktop, .cursor, .windsurf, .claudeCode, .geminiCLI:
+        case .claudeDesktop, .cursor, .windsurf, .claudeCode, .geminiCLI, .antigravity:
             return "mcpServers"
         case .vscode:
             return "mcp.servers"
