@@ -1,5 +1,5 @@
 name: Build MyMCP
-on: workflow_dispatch  # This lets you run it manually with a button click
+on: workflow_dispatch
 
 jobs:
   build:
@@ -8,8 +8,9 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Build App
-        # We disable code signing so it builds without an Apple Developer ID
+        # We change directory (cd) to the 'MyMCP' subfolder first!
         run: |
+          cd MyMCP
           xcodebuild -scheme MyMCP \
             -configuration Release \
             -derivedDataPath build \
@@ -21,4 +22,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MyMCP-App
-          path: build/Build/Products/Release/MyMCP.app
+          # Note the updated path: MyMCP/build/...
+          path: MyMCP/build/Build/Products/Release/MyMCP.app
