@@ -1,56 +1,42 @@
-name: FINAL WORKING BUILD
+name: FINAL FIX (Ad-Hoc Signing)
 on: workflow_dispatch
 
 jobs:
   build:
+    name: Build with Ad-Hoc Sign
     runs-on: macos-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: 🔍 DEBUG - List Files (Find the Project)
+      - name: Build App (Ad-Hoc Signed)
         run: |
-          echo "Current location:"
-          pwd
-          echo "List of all files:"
-          find . -maxdepth 3 -not -path '*/.*'
-
-      - name: Build App
-        run: |
-          # We try to go into the subfolder. 
-          # If the debug log above shows the project is in root, we will change this.
-          cd MyMCP || echo "MyMCP folder not found, staying in root"
+          # 1. Enter the project folder
+          cd MyMCP
           
-          # Force build
+          # 2. Build with Ad-Hoc Signing ("-")
+          # This fixes the "Exit Code 65" by satisfying the Apple Silicon requirement
           xcodebuild -scheme MyMCP \
             -configuration Release \
             -derivedDataPath build \
-            MACOSX_DEPLOYMENT_TARGET=12.0 \
+            MACOSX_DEPLOYMENT_TARGET=13.0 \
             ARCHS="x86_64 arm64" \
             ONLY_ACTIVE_ARCH=NO \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED="NO" \
+            CODE_SIGNING_ALLOWED="YES"
 
       - name: Zip with Symlinks
         run: |
-          # Try to find the build output (handling both subfolder and root cases)
-          if [ -d "MyMCP/build/Build/Products/Release" ]; then
-            cd MyMCP/build/Build/Products/Release
-          elif [ -d "build/Build/Products/Release" ]; then
-            cd build/Build/Products/Release
-          else
-            echo "❌ BUILD FAILED: Could not find the built app!"
-            exit 1
-          fi
+          # Go to the specific build output folder
+          cd MyMCP/build/Build/Products/Release
           
-          # Zip it properly
-          zip -r -y MyMCP_Final.zip MyMCP.app
+          # Zip it properly to prevent "Damaged App" error
+          zip -r -y MyMCP_AdHoc.zip MyMCP.app
 
       - name: Upload Result
         uses: actions/upload-artifact@v4
         with:
-          name: MyMCP-Final-App
-          path: |
-            MyMCP/build/Build/Products/Release/MyMCP_Final.zip
-            build/Build/Products/Release/MyMCP_Final.zip
+          name: MyMCP-App-Fixed
+          path: MyMCP/build/Build/Products/Release/MyMCP_AdHoc.zip
