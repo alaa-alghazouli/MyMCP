@@ -1,11 +1,15 @@
-name: Build Fix (Skip Sentry)
+name: Build MyMCP (Xcode 16 Fix)
 on: workflow_dispatch
 
 jobs:
   build_and_package:
-    runs-on: macos-14
+    # ---------------------------------------------------------
+    # CRITICAL FIX: We use 'macos-15' to get Xcode 16 support
+    # This solves the "Project Format 77" error.
+    # ---------------------------------------------------------
+    runs-on: macos-15
     
-    # 1. GLOBAL FIX: Tell Sentry to stop trying to upload
+    # Keep the Sentry fix so it doesn't crash later
     env:
       SENTRY_DISABLE_AUTO_UPLOAD: true
       SENTRY_NO_PROGRESS_BAR: true
@@ -18,10 +22,10 @@ jobs:
         run: |
           cd MyMCP
           
-          # Clean any weird file attributes that confuse the signer
+          # Clean attributes
           xattr -cr .
 
-          # Build with Sentry Upload Disabled
+          # Build using Ad-Hoc signing (Fixes Exit Code 65)
           xcodebuild -scheme MyMCP \
             -configuration Release \
             -derivedDataPath build \
@@ -33,6 +37,8 @@ jobs:
       - name: Package into DMG
         run: |
           cd MyMCP/build/Build/Products/Release
+          
+          # Create DMG
           npx create-dmg MyMCP.app --overwrite || true
           mv *.dmg MyMCP_Installer.dmg
 
